@@ -45,9 +45,6 @@ static LIST_HEAD ( efi_snp_devices );
 /** Network devices are currently claimed for use by iPXE */
 static int efi_snp_claimed;
 
-/** TPL prior to network devices being claimed */
-static EFI_TPL efi_snp_old_tpl;
-
 /* Downgrade user experience if configured to do so
  *
  * The default UEFI user experience for network boot is somewhat
@@ -1967,12 +1964,7 @@ struct efi_snp_device * last_opened_snpdev ( void ) {
  * @v delta		Claim count change
  */
 void efi_snp_add_claim ( int delta ) {
-	EFI_BOOT_SERVICES *bs = efi_systab->BootServices;
 	struct efi_snp_device *snpdev;
-
-	/* Raise TPL if we are about to claim devices */
-	if ( ! efi_snp_claimed )
-		efi_snp_old_tpl = bs->RaiseTPL ( TPL_CALLBACK );
 
 	/* Claim SNP devices */
 	efi_snp_claimed += delta;
@@ -1981,8 +1973,4 @@ void efi_snp_add_claim ( int delta ) {
 	/* Update SNP mode state for each interface */
 	list_for_each_entry ( snpdev, &efi_snp_devices, list )
 		efi_snp_set_state ( snpdev );
-
-	/* Restore TPL if we have released devices */
-	if ( ! efi_snp_claimed )
-		bs->RestoreTPL ( efi_snp_old_tpl );
 }
