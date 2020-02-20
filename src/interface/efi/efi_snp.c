@@ -120,7 +120,7 @@ static void efi_snp_set_mode ( struct efi_snp_device *snpdev ) {
 
 	mode->HwAddressSize = ll_addr_len;
 	mode->MediaHeaderSize = ll_protocol->ll_header_len;
-	mode->MaxPacketSize = netdev->max_pkt_len;
+	mode->MaxPacketSize = netdev->mtu;
 	mode->ReceiveFilterMask = ( EFI_SIMPLE_NETWORK_RECEIVE_UNICAST |
 				    EFI_SIMPLE_NETWORK_RECEIVE_MULTICAST |
 				    EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST );
@@ -1826,12 +1826,12 @@ static int efi_snp_probe ( struct net_device *netdev ) {
 		efi_snp_hii_uninstall ( snpdev );
 	efi_child_del ( efidev->device, snpdev->handle );
  err_efi_child_add:
-	bs->CloseProtocol ( snpdev->handle, &efi_nii_protocol_guid,
-			    efi_image_handle, snpdev->handle );
- err_open_nii:
 	bs->CloseProtocol ( snpdev->handle, &efi_nii31_protocol_guid,
 			    efi_image_handle, snpdev->handle );
  err_open_nii31:
+	bs->CloseProtocol ( snpdev->handle, &efi_nii_protocol_guid,
+			    efi_image_handle, snpdev->handle );
+ err_open_nii:
 	bs->UninstallMultipleProtocolInterfaces (
 			snpdev->handle,
 			&efi_simple_network_protocol_guid, &snpdev->snp,
